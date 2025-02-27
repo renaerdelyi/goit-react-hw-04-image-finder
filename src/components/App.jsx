@@ -1,69 +1,72 @@
-import React, { Component } from 'react';
-import { fetchImages } from '../services/imageApi';
-import { Searchbar } from './Searchbar/Searchbar';
+import { useState,useEffect } from 'react';
+import { fetchImages as fetchImagesApi } from '../services/imageApi';
+import  Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './common/Button/Button';
 import Modal from './common/Modal/Modal';
 import LoaderSpinner from './Loader/Loader';
 import "./styles.css/styles.css"
 
-export class App extends Component {
-  state = {
-    images: [],
-    isLoading: false,
-    query: '',
-    page: 1,
-    totalHits: 0,
-    isModalOpen: false,
-    modalImageURL: '',
+const App = () => {
+
+  const[images, setImages] = useState([]);
+  const[isLoading, setIsLoading] = useState(false);
+  const[query, setQuery] = useState('');
+  const[page, setPage] = useState(1);
+  const[totalHits, setTotalHits] = useState(0);
+  const[isModalOpen, setIsModalOpen] = useState(false);
+  const[modalImageURL, setModalImageURL] = useState('');
+
+  useEffect(() => {
+    if(query !== ''){
+      fetchImages(query, page);
+    }
+  }, [query, page]);
+
+  const handleSubmit = (query) => {
+    setQuery(query);
+    setImages([]);
+    setPage(1);
   };
 
-  handleSubmit = (query) => {
-    this.setState({ query, images: [], page: 1 }, this.fetchImages);
-  };
-
-  fetchImages = async () => {
-    const { query, page } = this.state;
-
-    this.setState({ isLoading: true });
+  const fetchImages = async (query, page) => {
+    setIsLoading(true);
 
     try {
       const data = await fetchImages(query, page);
-      this.setState((prevState) => ({
-        images: [...prevState.images, ...data.hits],
-        totalHits: data.totalHits,
-        isLoading: false,
-      }));
+      setImages((prevState) => [...prevState.images, ...data.hits]);
+        setTotalHits(data.totalHits);
     } catch (error) {
       console.error(error);
-      this.setState({ isLoading: false });
+    }finally{
+      setIsLoading(false);
     }
   };
 
-  handleLoadMore = () => {
-    this.setState((prevState) => ({ page: prevState.page + 1 }), this.fetchImages);
+ const handleLoadMore = () => {
+    setPage((prevPage) => prevPage + 1); 
   };
 
-  handleImageClick = (imageURL) => {
-    this.setState({ isModalOpen: true, modalImageURL: imageURL });
+ const handleImageClick = (imageURL) => {
+  setIsModalOpen(true);
+   setModalImageURL(imageURL);
   };
 
-  handleCloseModal = () => {
-    this.setState({ isModalOpen: false, modalImageURL: '' });
+ const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setModalImageURL('');
   };
-
-  render() {
-    const { images, isLoading, isModalOpen, modalImageURL } = this.state;
 
     return (
       <div>
-        <Searchbar onSubmit={this.handleSubmit}/>
+        <Searchbar onSubmit={handleSubmit}/>
         {isLoading && <LoaderSpinner/>}
-        <ImageGallery images={images} onClickImage={this.handleImageClick} />
-        {images.length > 0 && !isLoading && <Button action={this.handleLoadMore} />}
-        {isModalOpen && <Modal imageURL={modalImageURL} onClose={this.handleCloseModal} />}
+        <ImageGallery images={images} onClickImage={handleImageClick} />
+        {images.length > 0 && !isLoading && <Button action={handleLoadMore} />}
+        {isModalOpen && <Modal imageURL={modalImageURL} onClose={handleCloseModal} />}
       </div>
     );
-  }
+  
 }
 
+export default App;
