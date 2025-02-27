@@ -1,6 +1,6 @@
-import { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchImages as fetchImagesApi } from '../services/imageApi';
-import  Searchbar from './Searchbar/Searchbar';
+import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './common/Button/Button';
 import Modal from './common/Modal/Modal';
@@ -19,7 +19,7 @@ const App = () => {
 
   useEffect(() => {
     if(query !== ''){
-      fetchImages(query, page);
+      fetchImages();
     }
   }, [query, page]);
 
@@ -29,12 +29,12 @@ const App = () => {
     setPage(1);
   };
 
-  const fetchImages = async (query, page) => {
+  const fetchImages = async () => {
     setIsLoading(true);
 
     try {
-      const data = await fetchImages(query, page);
-      setImages((prevState) => [...prevState.images, ...data.hits]);
+      const data = await fetchImagesApi(query, page);
+      setImages((prevImages) => [...prevImages, ...data.hits]);
         setTotalHits(data.totalHits);
     } catch (error) {
       console.error(error);
